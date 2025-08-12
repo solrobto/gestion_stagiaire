@@ -15,7 +15,8 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
 import os
-locale.setlocale(locale.LC_TIME, 'French_France.1252')
+
+
 def generate_etat_presences_pdf(db_path, mois, annee, output_filename=None, lieu="ANTANANARIVO"):
     """
     Génère un PDF au format "ÉTAT POUR SERVIR AU PAIEMENT DES INDEMNITÉS DES STAGIAIRES".
@@ -26,7 +27,12 @@ def generate_etat_presences_pdf(db_path, mois, annee, output_filename=None, lieu
     # Normalisations
     mois = int(mois)
     annee = int(annee)
-    jours_mois = calendar.monthrange(annee, mois)[1]
+    # Remplace l'utilisation de calendar.month_name[...] par :
+    mois_fr = [
+        "", "JANVIER", "FÉVRIER", "MARS", "AVRIL", "MAI", "JUIN",
+        "JUILLET", "AOÛT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DÉCEMBRE"
+    ]
+    mois_en_francais = mois_fr[mois]
 
     if output_filename is None:
         output_filename = f"Etat_présences_{annee}_{mois:02d}.pdf"
@@ -50,7 +56,7 @@ def generate_etat_presences_pdf(db_path, mois, annee, output_filename=None, lieu
     conn.close()
 
     # Organiser présences par stagiaire
-    pres_by_stagiaire = {s[0]: {d: "0" for d in range(1, jours_mois+1)} for s in stagiaires}
+    pres_by_stagiaire = {s[0]: {d: "0" for d in range(1, mois_en_francais+1)} for s in stagiaires}
     totals = {s[0]: 0.0 for s in stagiaires}
     for sid, date_str, presence in pres_rows:
         try:
@@ -60,12 +66,12 @@ def generate_etat_presences_pdf(db_path, mois, annee, output_filename=None, lieu
         val = float(presence)
         # Représentation dans le tableau : "1", "0.5" ou "0"
         affichage = "1" if val == 1 else ("0.5" if val == 0.5 else "0")
-        pres_by_stagiaire.setdefault(sid, {i: "0" for i in range(1, jours_mois+1)})[d] = affichage
+        pres_by_stagiaire.setdefault(sid, {i: "0" for i in range(1, mois_en_francais+1)})[d] = affichage
         totals[sid] = totals.get(sid, 0.0) + val
 
     # Construire les données du tableau
     # En-tête : N°, MATRICULE, NOM ET PRÉNOMS, Attribution, jours..., T. Jours, PAOSITRA MONEY
-    jours_headers = [str(i) for i in range(1, jours_mois+1)]
+    jours_headers = [str(i) for i in range(1, mois_en_francais+1)]
     header = ["N°", "MATRICULE", "NOM ET PRÉNOMS", "Attribution"] + jours_headers + ["T. Jours", "PAOSITRA MONEY"]
     table_data = [header]
 
@@ -77,7 +83,7 @@ def generate_etat_presences_pdf(db_path, mois, annee, output_filename=None, lieu
             continue
 
         row = [numero, matricule, nom, "Stagiaire"]
-        row += [pres_by_stagiaire.get(sid, {}).get(i, "0") for i in range(1, jours_mois+1)]
+        row += [pres_by_stagiaire.get(sid, {}).get(i, "0") for i in range(1, mois_en_francais+1)]
 
         total_display = int(total) if float(total).is_integer() else f"{total:.1f}"
         row += [total_display, paositra if paositra is not None else ""]
@@ -103,7 +109,7 @@ def generate_etat_presences_pdf(db_path, mois, annee, output_filename=None, lieu
     # Table : possibilité d'ajuster colonnes
     # Calcul largeurs approximatives : N° (1cm), matricule (2.5cm), nom (7cm), attribution (3cm), jours (0.7cm chacun), total (1.5cm), paositra (3.5cm)
     day_col_width = 0.45*cm
-    col_widths = [0.5*cm, 1.5*cm, 7.0*cm, 1.5*cm] + [day_col_width]*jours_mois + [0.8*cm, 2.5*cm]
+    col_widths = [0.5*cm, 1.5*cm, 7.0*cm, 1.5*cm] + [day_col_width]*mois_en_francais + [0.8*cm, 2.5*cm]
 
     table = Table(table_data, colWidths=col_widths, repeatRows=1)
 
@@ -121,7 +127,7 @@ def generate_etat_presences_pdf(db_path, mois, annee, output_filename=None, lieu
     ])
 
     # Colorer les weekends en gris clair
-    for day in range(1, jours_mois+1):
+    for day in range(1, mois_en_francais+1):
         dt_obj = date(annee, mois, day)
         if dt_obj.weekday() in (5,6):  # samedi=5 dimanche=6
             col_idx = 4 + (day-1)
