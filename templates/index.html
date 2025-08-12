@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des Stagiaires</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+        .navbar {
+            background: linear-gradient(90deg, #ff512f, #dd2476);
+        }
+        .navbar-brand, .nav-link, .navbar-text {
+            color: white !important;
+            font-weight: bold;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        table thead {
+            background: linear-gradient(90deg, #ff512f, #dd2476);
+            color: white;
+        }
+        .btn-gradient {
+            background: linear-gradient(90deg, #ff512f, #dd2476);
+            color: white;
+            border: none;
+        }
+        .btn-gradient:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" href="/">📋 Gestion Stagiaires</a>
+        <div class="collapse navbar-collapse">
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">Bienvenue {{ username }}</span>
+                <a href="/logout" class="btn btn-sm btn-outline-light">Déconnexion</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+<!-- Contenu principal -->
+<div class="container py-4">
+
+    <!-- Formulaire ajout stagiaire -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">➕ Ajouter un Stagiaire</h5>
+        </div>
+        <div class="card-body">
+            <form class="row g-3" method="POST" action="/ajouter">
+                <div class="col-md-3">
+                    <input type="text" name="nom" class="form-control" placeholder="Nom complet" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="text" name="bureau" class="form-control" placeholder="Bureau" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" name="paositra" class="form-control" placeholder="PAOSITRA MONEY" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="text" name="matricule" class="form-control" placeholder="Matricule" required>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-gradient">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Messages flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-3">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Tableau stagiaires -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">📜 Liste des Stagiaires</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Bureau</th>
+                        <th>PAOSITRA</th>
+                        <th>Matricule</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in stagiaires %}
+                    <tr>
+                        <td>{{ s[0] }}</td>
+                        <td>{{ s[1] }}</td>
+                        <td>{{ s[3] }}</td>
+                        <td>{{ s[2] }}</td>
+                        <td>{{ s[4] }}</td>
+                        <td>
+                            <a class="btn btn-sm btn-warning" href="/modifier/{{ s[0] }}">✏ Modifier</a>
+                            <a class="btn btn-sm btn-outline-danger" href="/supprimer/{{ s[0] }}" 
+                               onclick="return confirm('Supprimer ce stagiaire ?')">🗑 Supprimer</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">Aucun stagiaire enregistré</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="mt-4 d-flex flex-wrap gap-2 justify-content-center">
+        <a href="/presences" class="btn btn-primary btn-lg">📋 Gérer les Présences</a>
+        <a href="/presences_admin" class="btn btn-primary btn-lg">📋 Presences par stagiaire</a>
+        <a href="/recap" class="btn btn-info btn-lg">📊 Récap Mensuel</a>
+        <a href="/export/presences/pdf" class="btn btn-gradient btn-lg">📄 Etat PDF</a>
+    </div>
+ </div>
+</div>
+<footer class="copyright text-center">
+    &copy; RAKOTONAIVO Solofojaona roberto 2025
+</footer>
+<style>
+    .copyright {
+        color: #888;
+        font-size: 0.95rem;
+        text-align: center;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.85);
+        padding: 8px 0 6px 0;
+        z-index: 100;
+        margin: 0;
+    }
+</style>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let sessionTimeout;
+const SESSION_DELAY = 10 * 60 * 1000; // 10 minutes en ms
+
+function resetSessionTimer() {
+    clearTimeout(sessionTimeout);
+    sessionTimeout = setTimeout(() => {
+        window.location.href = "/logout";
+    }, SESSION_DELAY);
+}
+
+// Réinitialise le timer sur toute activité utilisateur
+['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt =>
+    document.addEventListener(evt, resetSessionTimer)
+);
+
+resetSessionTimer();
+</script>
+</body>
+</html>
