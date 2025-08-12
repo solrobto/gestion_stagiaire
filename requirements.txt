@@ -3,3 +3,6 @@ werkzeug
 reportlab
 pandas
 openpyxl
+flask-login
+flask-wtf
+flask-bootstrap         
