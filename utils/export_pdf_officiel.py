@@ -1,6 +1,11 @@
 # utils/export_pdf_officiel.py
 import sqlite3
 import locale
+try:
+    locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
+except locale.Error:
+    # Si la locale française n'est pas dispo, on garde la locale par défaut
+    pass
 import calendar
 from datetime import datetime, date
 from reportlab.lib.pagesizes import landscape, A4
