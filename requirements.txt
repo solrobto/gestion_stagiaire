@@ -3,3 +3,4 @@ werkzeug
 reportlab
 pandas
 gunicorn        
+xlsxwriter
