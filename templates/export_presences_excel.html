@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Export excel Officiel - Présences Stagiaires</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+        .navbar {
+            background: linear-gradient(90deg, #2fff32, #24dd3a);
+        }
+        .navbar-brand, .nav-link, .navbar-text {
+            color: white !important;
+            font-weight: bold;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .btn-gradient {
+            background: linear-gradient(90deg, #2fff5f, #24dd58);
+            color: white;
+            border: none;
+        }
+        .btn-gradient:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Barre de navigation -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" href="/">📋 Gestion Stagiaires</a>
+        <div class="collapse navbar-collapse">
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">⬅ Retour</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Contenu principal -->
+<div class="container py-5">
+    <h2 class="mb-4 text-center">📄 Export excel Officiel</h2>
+    <p class="text-center text-muted">
+        Sélectionnez le mois et l'année pour générer l'état officiel des présences des stagiaires.
+    </p>
+
+    <div class="card mx-auto" style="max-width: 500px;">
+        <div class="card-body">
+            <form method="POST" action="/export/presences/excel">
+                <div class="mb-3">
+                    <label class="form-label">Mois</label>
+                    <select name="mois" class="form-select" required>
+                        {% for m in range(1, 13) %}
+                            <option value="{{'%02d' % m}}">{{'%02d' % m}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Année</label>
+                    <select name="annee" class="form-select" required>
+                        {% for y in range(2024, 2031) %}
+                            <option value="{{ y }}">{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-gradient btn-lg w-100">
+                        📥 Générer le PDF Officiel
+                    </button>
+                </div>
+            </form>
+        </div>
+     </div>
+</div>
+<footer class="copyright text-center">
+    &copy; RAKOTONAIVO Solofojaona roberto 2025
+</footer>
+<style>
+    .copyright {
+        color: #888;
+        font-size: 0.95rem;
+        text-align: center;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.85);
+        padding: 8px 0 6px 0;
+        z-index: 100;
+        margin: 0;
+    }
+</style>
+    </div>
+    </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let sessionTimeout;
+const SESSION_DELAY = 10 * 60 * 1000; // 10 minutes en ms
+
+function resetSessionTimer() {
+    clearTimeout(sessionTimeout);
+    sessionTimeout = setTimeout(() => {
+        window.location.href = "/logout";
+    }, SESSION_DELAY);
+}
+
+// Réinitialise le timer sur toute activité utilisateur
+['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt =>
+    document.addEventListener(evt, resetSessionTimer)
+);
+
+resetSessionTimer();
+</script>
+</body>
+</html>
