@@ -5,6 +5,7 @@ from datetime import datetime, date, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from utils.export_pdf_officiel import generate_etat_presences_pdf  # (optionnel pour export PDF)
+from utils.export_excel_officiel import generate_etat_presences_excel  # (optionnel pour export Excel)
 from calendar import monthrange
 app = Flask(__name__)
 app.secret_key = "CHANGE_THIS_TO_A_RANDOM_SECRET"
@@ -313,6 +314,29 @@ def export_presences_pdf():
             return send_file(output, as_attachment=True, download_name=os.path.basename(output))
         flash("Erreur génération PDF", "danger"); return redirect(url_for("export_presences_pdf"))
     return render_template("export_presences_pdf.html", username=session.get("username"))
+
+@app.route("/export/presences/excel", methods=["GET","POST"])
+@login_required(role="admin")
+def export_presences_excel():
+    if request.method == "POST":
+        mois = request.form.get("mois")
+        annee = request.form.get("annee")
+        try:
+            output = generate_etat_presences_excel(DB, mois, annee)
+
+            # Envoi direct du BytesIO
+            return send_file(
+                output,
+                as_attachment=True,
+                download_name=f"Etat_presences_{annee}_{mois.zfill(2)}.xlsx",
+                mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+        except Exception as e:
+            flash(f"Erreur génération Excel : {e}", "danger")
+            return redirect(url_for("export_presences_excel"))
+
+    return render_template("export_presences_excel.html", username=session.get("username"))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
