@@ -277,17 +277,35 @@ def user_presence():
 @app.route("/user/presences")
 @login_required(role="user")
 def user_presences():
-    user_id = session.get("user_id")
+    matricule = session.get("matricule")  # récupérer le matricule de la session
     mois = request.args.get("mois", date.today().strftime("%Y-%m"))
+
     conn = sqlite3.connect(DB)
     cursor = conn.cursor()
+
+    # On récupère l'id du stagiaire à partir du matricule
+    cursor.execute("SELECT id FROM stagiaire WHERE matricule = ?", (matricule,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        flash("Stagiaire introuvable.", "danger")
+        return redirect(url_for("user_profile"))
+
+    stagiaire_id = row[0]
+
+    # Maintenant on récupère les présences pour ce stagiaire
     cursor.execute("""
         SELECT date, presence FROM presences
         WHERE stagiaire_id = ? AND strftime('%Y-%m', date) = ?
         ORDER BY date ASC
-    """, (user_id, mois))
+    """, (stagiaire_id, mois))
+
     presences = cursor.fetchall()
+    conn.close()
+
     return render_template("user_presences.html", presences=presences, mois_selectionne=mois)
+
+
 
 # ---------------- Recap & Export (admin) ----------------
 @app.route("/recap", methods=["GET","POST"])
